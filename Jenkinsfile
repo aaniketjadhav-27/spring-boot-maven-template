@@ -5,8 +5,8 @@ pipeline {
         SCANNER_HOME = tool 'SonarQube-Scanner'
         APP_NAME     = 'devsecops-app'
         NEXUS_IP     = 'localhost'
-        AWS_REGION   = 'ap-south-1'            // ap-south-1
-        AWS_ACCOUNT  = '966137697484'          // Enter your 12-digit AWS Account ID
+        AWS_REGION   = 'ap-south-1'            // Your region
+        AWS_ACCOUNT  = '966137697484'          // Your 12-digit AWS Account ID
     }
 
     stages {
@@ -16,15 +16,17 @@ pipeline {
             }
         }
 
-        stage('Trivy FS Scan') {
-            steps {
-                sh 'trivy fs --severity HIGH,CRITICAL --format table -o trivy-fs.txt .'
-            }
-        }
-
+        // 1. Compile & package first so ~/.m2 has all dependencies locally
         stage('Maven Build & Package') {
             steps {
                 sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        // 2. Scan offline using the local filesystem & cached jars (avoids HTTP 429)
+        stage('Trivy FS Scan') {
+            steps {
+                sh 'trivy fs --offline --skip-version-check --severity HIGH,CRITICAL --format table -o trivy-fs.txt .'
             }
         }
 
@@ -62,7 +64,7 @@ pipeline {
 
         stage('Trivy Image Scan') {
             steps {
-                sh "trivy image --severity CRITICAL --exit-code 0 ${APP_NAME}:${BUILD_NUMBER}"
+                sh "trivy image --skip-version-check --severity CRITICAL --exit-code 0 ${APP_NAME}:${BUILD_NUMBER}"
             }
         }
 
