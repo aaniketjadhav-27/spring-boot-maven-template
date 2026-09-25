@@ -26,7 +26,9 @@ pipeline {
         // 2. Scan offline using the local filesystem & cached jars (avoids HTTP 429)
         stage('Trivy FS Scan') {
             steps {
-                sh 'trivy fs --offline --skip-version-check --severity HIGH,CRITICAL --format table -o trivy-fs.txt .'
+                sh 'trivy fs --offline-scan --skip-version-check --severity HIGH,CRITICAL --format table -o trivy-fs.txt .'
+            }
+        }
             }
         }
 
