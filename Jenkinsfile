@@ -29,8 +29,6 @@ pipeline {
                 sh 'trivy fs --offline-scan --skip-version-check --severity HIGH,CRITICAL --format table -o trivy-fs.txt .'
             }
         }
-            }
-        }
 
         stage('SonarQube Analysis') {
             steps {
